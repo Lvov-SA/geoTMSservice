@@ -8,42 +8,44 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
-	coef := math.Pow(2, float64(z))
-	maxSize := min(layer.Width, layer.Height)
-	xFloat := float64(x)
-	yFloat := float64(y)
-	maxSizeFloat := float64(maxSize)
-	readSize := maxSizeFloat / coef
-	if xFloat*readSize >= float64(layer.Width) || yFloat*readSize >= float64(layer.Height) {
-		return nil, errors.New("Выход за границы")
+	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/"
+	fileName := strconv.Itoa(x) + "_" + strconv.Itoa(y) + ".png"
+	file, err := os.Open(filePath + fileName)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(filePath, 0755)
+		if err != nil {
+			return nil, err
+		}
+		file, err = os.Create(filePath + fileName)
+		if err != nil {
+			return nil, err
+		}
+		coef := math.Pow(2, float64(z))
+		maxSize := min(layer.Width, layer.Height)
+		xFloat := float64(x)
+		yFloat := float64(y)
+		maxSizeFloat := float64(maxSize)
+		readSize := maxSizeFloat / coef
+		if xFloat*readSize >= float64(layer.Width) || yFloat*readSize >= float64(layer.Height) {
+			return nil, errors.New("Выход за границы")
+		}
+		cmd := exec.Command("gdal_translate", "-srcwin",
+			fmt.Sprintf("%d", int(xFloat*readSize)),
+			fmt.Sprintf("%d", int(yFloat*readSize)),
+			fmt.Sprintf("%d", int(readSize)),
+			fmt.Sprintf("%d", int(readSize)),
+			"-outsize",
+			fmt.Sprintf("%d", layer.TileSize),
+			fmt.Sprintf("%d", layer.TileSize),
+			"../resource/map/"+layer.SourcePath,
+			filePath+fileName)
+		cmd.Run()
 	}
-	tmpFile, err := os.CreateTemp("../resource", "tile_*.png")
-	if err != nil {
-		return nil, err
-	}
-	tmpPath := tmpFile.Name()
-	tmpFile.Close()
-	defer os.Remove(tmpPath)
-	defer os.Remove(tmpPath + ".aux.xml")
-	cmd := exec.Command("gdal_translate", "-srcwin",
-		fmt.Sprintf("%d", int(xFloat*readSize)),
-		fmt.Sprintf("%d", int(yFloat*readSize)),
-		fmt.Sprintf("%d", int(readSize)),
-		fmt.Sprintf("%d", int(readSize)),
-		"-outsize",
-		fmt.Sprintf("%d", layer.TileSize),
-		fmt.Sprintf("%d", layer.TileSize),
-		"../resource/map/"+layer.SourcePath,
-		tmpPath)
-	cmd.Run()
 
-	file, err := os.Open(tmpPath)
-	if err != nil {
-		return nil, err
-	}
 	imageRGBA, _, err := image.Decode(file)
 	if err != nil {
 		return nil, err
