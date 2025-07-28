@@ -44,6 +44,10 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 			"../resource/map/"+layer.SourcePath,
 			filePath+fileName)
 		cmd.Run()
+		err = compress(filePath + fileName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	imageRGBA, _, err := image.Decode(file)
@@ -51,4 +55,14 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 		return nil, err
 	}
 	return imageRGBA, nil
+}
+
+func compress(inputPath string) error {
+	cmd := exec.Command(
+		"optipng",
+		"-o7",           // Уровень оптимизации (0-7)
+		"-strip", "all", // Удаляет все метаданные
+		inputPath,
+	)
+	return cmd.Run()
 }
