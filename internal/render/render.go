@@ -13,8 +13,11 @@ import (
 func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 	coef := math.Pow(2, float64(z))
 	maxSize := min(layer.Width, layer.Height)
-	readSize := float64(maxSize) / float64(coef)
-	if float64(x)*readSize >= float64(layer.Width) || float64(y)*readSize >= float64(layer.Height) {
+	xFloat := float64(x)
+	yFloat := float64(y)
+	maxSizeFloat := float64(maxSize)
+	readSize := maxSizeFloat / coef
+	if xFloat*readSize >= float64(layer.Width) || yFloat*readSize >= float64(layer.Height) {
 		return nil, errors.New("Выход за границы")
 	}
 	tmpFile, err := os.CreateTemp("../resource", "tile_*.png")
@@ -26,8 +29,8 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 	defer os.Remove(tmpPath)
 	defer os.Remove(tmpPath + ".aux.xml")
 	cmd := exec.Command("gdal_translate", "-srcwin",
-		fmt.Sprintf("%d", int(float64(x)*readSize)),
-		fmt.Sprintf("%d", int(float64(y)*readSize)),
+		fmt.Sprintf("%d", int(xFloat*readSize)),
+		fmt.Sprintf("%d", int(yFloat*readSize)),
 		fmt.Sprintf("%d", int(readSize)),
 		fmt.Sprintf("%d", int(readSize)),
 		"-outsize",
