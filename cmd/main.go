@@ -6,6 +6,7 @@ import (
 	"geoserver/internal/db"
 	"geoserver/internal/handlers"
 	"geoserver/internal/loader"
+	"strconv"
 
 	"log"
 	"net/http"
@@ -35,11 +36,12 @@ func main() {
 	mux.HandleFunc("/", handlers.IndexHandler)
 	mux.HandleFunc("GET /{tile}/{z}/{x}/{y}", handlers.TileHandler)
 
+	appUrl := config.Configs.HOST + ":" + strconv.Itoa(config.Configs.APP_PORT)
 	log.Println("Server started at :8080")
-	log.Println("Access example: http://localhost:8080/tile/0/0/0.png")
-	log.Println("Look at map: http://localhost:8080")
+	log.Println("Access example: http://" + appUrl + "/tile/0/0/0.png")
+	log.Println("Look at map: http://" + appUrl)
 
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(appUrl, mux)
 	if err != nil {
 		fmt.Printf("Ошибка запуска сервера: %v", err)
 		return

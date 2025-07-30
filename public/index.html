@@ -108,7 +108,7 @@
             const bounds = new L.LatLngBounds(southWest, northEast);
             
             // Добавляем тайловый слой
-            tileLayer = L.tileLayer('http://{{.Host}}:8080/tile/{z}/{x}/{y}.png', {
+            tileLayer = L.tileLayer('http://{{.Host}}:{{.Port}}/tile/{z}/{x}/{y}.png', {
                 minZoom: 0,
                 maxZoom: 16,
                 bounds: bounds,
