@@ -37,7 +37,7 @@ func main() {
 	mux.HandleFunc("GET /{tile}/{z}/{x}/{y}", handlers.TileHandler)
 
 	appUrl := config.Configs.HOST + ":" + strconv.Itoa(config.Configs.APP_PORT)
-	log.Println("Server started at :8080")
+	log.Println("Server started at " + appUrl)
 	log.Println("Access example: http://" + appUrl + "/tile/0/0/0.png")
 	log.Println("Look at map: http://" + appUrl)
 
