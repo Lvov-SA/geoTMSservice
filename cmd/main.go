@@ -41,7 +41,7 @@ func main() {
 	log.Println("Access example: http://" + appUrl + "/tile/0/0/0.png")
 	log.Println("Look at map: http://" + appUrl)
 
-	err = http.ListenAndServe(appUrl, mux)
+	err = http.ListenAndServe("0.0.0.0:"+strconv.Itoa(config.Configs.APP_PORT), mux)
 	if err != nil {
 		fmt.Printf("Ошибка запуска сервера: %v", err)
 		return
