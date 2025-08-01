@@ -17,7 +17,7 @@ func TileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	z, err := strconv.Atoi(r.PathValue("z"))
-	if err != nil || z < 0 {
+	if err != nil || z < tileModel.MinZoom || z > tileModel.MaxZoom {
 		http.Error(w, "Invalid z parameter", http.StatusBadRequest)
 		return
 	}
@@ -34,13 +34,13 @@ func TileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	img, err := render.CliRender(tileModel, z, x, y)
-	if err != nil || y < 0 {
+	if err != nil {
 		http.Error(w, "Ошибка генерации тайла: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
 	if err := png.Encode(w, img); err != nil {
-		http.Error(w, "Ошибка декодирвоания тайла: "+err.Error(), http.StatusBadRequest)
+		println("Ошибка декодирвоания файла " + err.Error())
 		return
 	}
 }

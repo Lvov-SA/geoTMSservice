@@ -53,5 +53,6 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
+	file.Close()
 	return imageRGBA, nil
 }
