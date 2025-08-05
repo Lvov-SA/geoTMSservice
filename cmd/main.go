@@ -6,6 +6,7 @@ import (
 	"geoserver/internal/db"
 	"geoserver/internal/handlers"
 	"geoserver/internal/loader"
+	"geoserver/internal/render"
 	"strconv"
 
 	"log"
@@ -31,6 +32,8 @@ func main() {
 		fmt.Printf("Ошибка загрузки данных слоев: %v", err)
 		return
 	}
+
+	render.InitWorkers()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handlers.IndexHandler)
