@@ -7,7 +7,8 @@ import (
 	"geoserver/internal/db/models"
 	"math"
 	"os"
-	"os/exec"
+
+	"github.com/Lvov-SA/gdal"
 )
 
 type Task struct {
@@ -59,23 +60,42 @@ func renderWorker(tasks <-chan Task) {
 			os.Remove(task.filePath + task.fileName)
 			continue
 		}
-		cmd := exec.Command("gdal_translate", "-srcwin",
+		// cmd := exec.Command("gdal_translate", "-srcwin",
+		// 	fmt.Sprintf("%d", int(xFloat*readSize)),
+		// 	fmt.Sprintf("%d", int(yFloat*readSize)),
+		// 	fmt.Sprintf("%d", int(readSize)),
+		// 	fmt.Sprintf("%d", int(readSize)),
+		// 	"-outsize",
+		// 	fmt.Sprintf("%d", task.layer.TileSize),
+		// 	fmt.Sprintf("%d", task.layer.TileSize),
+		// 	"../resource/map/"+task.layer.SourcePath,
+		// 	task.filePath+task.fileName)
+		options := []string{"-srcwin",
 			fmt.Sprintf("%d", int(xFloat*readSize)),
 			fmt.Sprintf("%d", int(yFloat*readSize)),
 			fmt.Sprintf("%d", int(readSize)),
 			fmt.Sprintf("%d", int(readSize)),
 			"-outsize",
 			fmt.Sprintf("%d", task.layer.TileSize),
-			fmt.Sprintf("%d", task.layer.TileSize),
+			fmt.Sprintf("%d", task.layer.TileSize)}
+		err = gdal.ConvertTile(
 			"../resource/map/"+task.layer.SourcePath,
-			task.filePath+task.fileName)
-		err = cmd.Run()
+			task.filePath+task.fileName,
+			options,
+		)
 		if err != nil {
 			task.result <- Result{isSuccess: false, err: err}
 			close(task.result)
 			os.Remove(task.filePath + task.fileName)
 			continue
 		}
+		// err = cmd.Run()
+		// if err != nil {
+		// 	task.result <- Result{isSuccess: false, err: err}
+		// 	close(task.result)
+		// 	os.Remove(task.filePath + task.fileName)
+		// 	continue
+		// }
 		task.result <- Result{isSuccess: true, err: nil}
 		close(task.result)
 	}
