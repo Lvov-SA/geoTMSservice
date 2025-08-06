@@ -31,7 +31,7 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 					return nil, err
 				}
 			}
-		case <-time.After(120 * time.Second):
+		case <-time.After(10 * time.Minute):
 			return nil, errors.New("Истекло время ожидания воркера")
 		}
 		file, err = os.Open(filePath + fileName)
