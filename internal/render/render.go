@@ -2,7 +2,6 @@ package render
 
 import (
 	"errors"
-	"fmt"
 	"geoserver/internal/db/models"
 	"image"
 	"os"
@@ -16,7 +15,6 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 	file, err := os.Open(filePath + fileName)
 	if os.IsNotExist(err) {
 		resultChan := make(chan Result, 1)
-		fmt.Println("Отправка задачи в канал")
 		Tasks <- Task{
 			layer:    layer,
 			filePath: filePath,
@@ -36,7 +34,10 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 		case <-time.After(120 * time.Second):
 			return nil, errors.New("Истекло время ожидания воркера")
 		}
-
+		file, err = os.Open(filePath + fileName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	imageRGBA, _, err := image.Decode(file)

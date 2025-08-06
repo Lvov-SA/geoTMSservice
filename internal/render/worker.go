@@ -34,7 +34,6 @@ func InitWorkers() {
 func renderWorker(tasks <-chan Task) {
 	fmt.Println("Start processing")
 	for task := range tasks {
-		fmt.Println("Processing tile")
 		err := os.MkdirAll(task.filePath, 0755)
 		if err != nil {
 			task.result <- Result{isSuccess: false, err: err}
