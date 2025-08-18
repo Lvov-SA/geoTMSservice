@@ -6,6 +6,7 @@ import (
 	"image"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -23,6 +24,7 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 			y:        y,
 			z:        z,
 			result:   resultChan,
+			wg:       nil,
 		}
 		select {
 		case result := <-resultChan:
@@ -42,8 +44,24 @@ func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
 
 	imageRGBA, _, err := image.Decode(file)
 	if err != nil {
+		file.Close()
 		return nil, err
 	}
 	file.Close()
 	return imageRGBA, nil
+}
+
+func MakeTask(layer models.Layer, z, x, y int, resultChan chan Result, wg *sync.WaitGroup) {
+	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/"
+	fileName := strconv.Itoa(x) + "_" + strconv.Itoa(y) + ".png"
+	Tasks <- Task{
+		layer:    layer,
+		filePath: filePath,
+		fileName: fileName,
+		x:        x,
+		y:        y,
+		z:        z,
+		result:   resultChan,
+		wg:       wg,
+	}
 }
