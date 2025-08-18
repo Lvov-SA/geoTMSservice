@@ -9,6 +9,7 @@ import (
 	"geoserver/internal/render"
 	"math"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -61,9 +62,17 @@ func main() {
 		fmt.Printf(" Zoom ready: %v", z)
 		fmt.Println()
 	}
+	defer timer("Render")()
 }
 
 func CalculateTiles(zoom int) (width, height int) {
 	tiles := math.Pow(2, float64(zoom))
 	return int(tiles), int(tiles)
+}
+
+func timer(name string) func() {
+	start := time.Now()
+	return func() {
+		fmt.Printf("%s took %v\n", name, time.Since(start))
+	}
 }
