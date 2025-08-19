@@ -28,8 +28,8 @@ type Result struct {
 var Tasks chan Task
 
 func InitWorkers() {
-	Tasks = make(chan Task, config.Configs.WORKER_COUNT)
-	for i := 0; i < config.Configs.WORKER_COUNT*10; i++ {
+	Tasks = make(chan Task, config.Configs.WORKER_COUNT*10)
+	for i := 0; i < config.Configs.WORKER_COUNT; i++ {
 		go renderWorker(Tasks)
 	}
 }
