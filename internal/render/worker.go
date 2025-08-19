@@ -29,7 +29,7 @@ var Tasks chan Task
 
 func InitWorkers() {
 	Tasks = make(chan Task, config.Configs.WORKER_COUNT)
-	for i := 0; i < config.Configs.WORKER_COUNT*5; i++ {
+	for i := 0; i < config.Configs.WORKER_COUNT*10; i++ {
 		go renderWorker(Tasks)
 	}
 }
