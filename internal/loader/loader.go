@@ -16,6 +16,7 @@ import (
 var Layers map[string]models.Layer
 
 func GeoTiff() error {
+	gdal.Init()
 	err := Load()
 	if err != nil {
 		return err

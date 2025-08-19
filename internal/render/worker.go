@@ -7,6 +7,7 @@ import (
 	"geoserver/internal/db/models"
 	"math"
 	"os"
+	"sync"
 
 	"github.com/Lvov-SA/gdal"
 )
@@ -16,6 +17,7 @@ type Task struct {
 	z, x, y            int
 	filePath, fileName string
 	result             chan Result
+	wg                 *sync.WaitGroup
 }
 
 type Result struct {
@@ -26,8 +28,8 @@ type Result struct {
 var Tasks chan Task
 
 func InitWorkers() {
-	Tasks = make(chan Task)
-	for i := 0; i < config.Configs.WORKER_COUNT; i++ {
+	Tasks = make(chan Task, config.Configs.WORKER_COUNT)
+	for i := 0; i < config.Configs.WORKER_COUNT*10; i++ {
 		go renderWorker(Tasks)
 	}
 }
@@ -37,14 +39,14 @@ func renderWorker(tasks <-chan Task) {
 	for task := range tasks {
 		err := os.MkdirAll(task.filePath, 0755)
 		if err != nil {
-			task.result <- Result{isSuccess: false, err: err}
-			close(task.result)
-			continue
-		}
-		_, err = os.Create(task.filePath + task.fileName)
-		if err != nil {
-			task.result <- Result{isSuccess: false, err: err}
-			close(task.result)
+
+			if task.result != nil {
+				task.result <- Result{isSuccess: false, err: err}
+				close(task.result)
+			}
+			if task.wg != nil {
+				task.wg.Done()
+			}
 			continue
 		}
 
@@ -55,9 +57,14 @@ func renderWorker(tasks <-chan Task) {
 		maxSizeFloat := float64(maxSize)
 		readSize := maxSizeFloat / coef
 		if xFloat*readSize >= float64(task.layer.Width) || yFloat*readSize >= float64(task.layer.Height) {
-			task.result <- Result{isSuccess: false, err: errors.New("Выход за границы")}
-			close(task.result)
-			os.Remove(task.filePath + task.fileName)
+
+			if task.result != nil {
+				task.result <- Result{isSuccess: false, err: errors.New("Выход за границы")}
+				close(task.result)
+			}
+			if task.wg != nil {
+				task.wg.Done()
+			}
 			continue
 		}
 		options := []string{"-srcwin",
@@ -74,12 +81,24 @@ func renderWorker(tasks <-chan Task) {
 			options,
 		)
 		if err != nil {
-			task.result <- Result{isSuccess: false, err: err}
-			close(task.result)
+
+			if task.result != nil {
+				task.result <- Result{isSuccess: false, err: err}
+				close(task.result)
+			}
 			os.Remove(task.filePath + task.fileName)
+			if task.wg != nil {
+				task.wg.Done()
+			}
 			continue
 		}
-		task.result <- Result{isSuccess: true, err: nil}
-		close(task.result)
+		if task.result != nil {
+			task.result <- Result{isSuccess: true, err: nil}
+			close(task.result)
+		}
+		if task.wg != nil {
+			task.wg.Done()
+		}
+
 	}
 }
