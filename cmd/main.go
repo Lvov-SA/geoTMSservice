@@ -6,6 +6,7 @@ import (
 	"geoserver/internal/db"
 	"geoserver/internal/handlers"
 	"geoserver/internal/loader"
+	"geoserver/internal/middlware"
 	"geoserver/internal/render"
 	"strconv"
 
@@ -39,12 +40,14 @@ func main() {
 	mux.HandleFunc("/", handlers.IndexHandler)
 	mux.HandleFunc("GET /{tile}/{z}/{x}/{y}", handlers.TileHandler)
 
+	handler := middlware.Init(mux)
+
 	appUrl := config.Configs.HOST + ":" + strconv.Itoa(config.Configs.APP_PORT)
 	log.Println("Server started at " + appUrl)
 	log.Println("Access example: http://" + appUrl + "/tile/0/0/0.png")
 	log.Println("Look at map: http://" + appUrl)
 
-	err = http.ListenAndServe("0.0.0.0:"+strconv.Itoa(config.Configs.APP_PORT), mux)
+	err = http.ListenAndServe("0.0.0.0:"+strconv.Itoa(config.Configs.APP_PORT), handler)
 	if err != nil {
 		fmt.Printf("Ошибка запуска сервера: %v", err)
 		return
