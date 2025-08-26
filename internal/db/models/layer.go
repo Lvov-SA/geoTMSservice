@@ -21,4 +21,10 @@ type Layer struct {
 	Height     int //Высота исходника
 	TileSize   int `gorm:"default:256"` //размер тайла для слоя
 	Projection string
+
+	//Границы слоя
+	UpperLeftX  float64
+	UpperLeftY  float64
+	LowerRightX float64
+	LowerRightY float64
 }
