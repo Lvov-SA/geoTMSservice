@@ -25,6 +25,8 @@ func CliWarpRender(task Task) error {
 		"-ts",
 		strconv.Itoa(task.layer.TileSize),
 		strconv.Itoa(task.layer.TileSize),
+		"--config", "GDAL_CACHEMAX", "512",
+		"-wm", "2048",
 		"-r", "near",
 		"-of", "PNG",
 		"-co", "COMPRESS=DEFLATE",
