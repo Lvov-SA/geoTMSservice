@@ -14,6 +14,11 @@ import (
 func CliWarpRender(task Task) error {
 	minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
 
+	intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
+		maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
+	if !intersects {
+		return errors.New("Ошибка границ слоя")
+	}
 	args := []string{
 		"-s_srs", task.layer.Projection,
 		"-t_srs", "EPSG:3857",

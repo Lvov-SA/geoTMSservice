@@ -69,6 +69,11 @@ func Load() error {
 		layer.Height = dataset.RasterYSize()
 		projection, err := parser.ExtractProjectionFromWKT(dataset.Projection())
 		layer.Projection = projection
+
+		layer.UpperLeftX, layer.UpperLeftY, layer.LowerRightX, layer.LowerRightY, err = parser.ExtractBounds(src)
+		if err != nil {
+			return err
+		}
 		layer.IsActive = true
 		layer.TileSize = 256
 		layer.MinZoom = 0
