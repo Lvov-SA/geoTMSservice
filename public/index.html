@@ -63,59 +63,32 @@
         const loadingElement = document.getElementById('loading');
         const coordinatesElement = document.getElementById('coordinates');
         imageWidth = 16200;
-                imageHeight = 8100;
-                tileSize = 256;
-        // 1. Запрашиваем данные о карте с сервера
-        // fetch('/image-info')
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         // Получаем параметры карты
-        //         imageWidth = data.width;
-        //         imageHeight = data.height;
-        //         tileSize = data.tileSize || 256;
-                
-        //         // Инициализируем карту
-        //         initMap();
-                
-        //         // Скрываем загрузчик
-        //         loadingElement.style.display = 'none';
-        //     })
-        //     .catch(error => {
-        //         console.error('Ошибка загрузки данных:', error);
-        //         loadingElement.textContent = 'Ошибка загрузки данных с сервера';
-        //     });
-                        initMap();
+        imageHeight = 8100;
+        tileSize = 256;
+        initMap();
                 
                 // Скрываем загрузчик
-                loadingElement.style.display = 'none';
+        loadingElement.style.display = 'none';
         // 2. Инициализация карты
         function initMap() {
-            // Создаем карту
-            map = L.map('map', {
-                crs: L.CRS.Simple,
-                minZoom: 0,
-                maxZoom: 16,
-                zoomSnap: 1,
-                zoomDelta: 1,
-                wheelPxPerZoomLevel: 60,
-                inertia: true
-            });
-            
+             const map = L.map('map').setView([55.7558, 37.6173], 10); // Москва
+
+            // Добавляем тайлы в Web Mercator
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Добавляем ваши тайлы
+            L.tileLayer('/tile/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                opacity: 0.7
+            }).addTo(map);
             // Рассчитываем границы изображения
             const pixelOrigin = [0, 0];
             const southWest = map.unproject(pixelOrigin, 0);
             const northEast = map.unproject([imageWidth, imageHeight], 0);
             const bounds = new L.LatLngBounds(southWest, northEast);
-            
-            // Добавляем тайловый слой
-            tileLayer = L.tileLayer('http://{{.Host}}:{{.Port}}/tile/{z}/{x}/{y}.png', {
-                minZoom: 0,
-                maxZoom: 16,
-                bounds: bounds,
-                noWrap: true,
-                tms: false,
-                errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
-            }).addTo(map);
             
             // Устанавливаем начальный вид - тайл [0,0,0]
             const startZoom = 0;
