@@ -1,15 +1,14 @@
 package render
 
 import (
-	"errors"
 	"fmt"
 	"geoserver/internal/config"
 	"geoserver/internal/db/models"
-	"math"
+	"geoserver/internal/translator"
 	"os"
+	"os/exec"
+	"strconv"
 	"sync"
-
-	"github.com/Lvov-SA/gdal"
 )
 
 type Task struct {
@@ -50,36 +49,61 @@ func renderWorker(tasks <-chan Task) {
 			continue
 		}
 
-		coef := math.Pow(2, float64(task.z))
-		maxSize := min(task.layer.Width, task.layer.Height)
-		xFloat := float64(task.x)
-		yFloat := float64(task.y)
-		maxSizeFloat := float64(maxSize)
-		readSize := maxSizeFloat / coef
-		if xFloat*readSize >= float64(task.layer.Width) || yFloat*readSize >= float64(task.layer.Height) {
+		// coef := math.Pow(2, float64(task.z))
+		// maxSize := min(task.layer.Width, task.layer.Height)
+		// xFloat := float64(task.x)
+		// yFloat := float64(task.y)
+		// maxSizeFloat := float64(maxSize)
+		// readSize := maxSizeFloat / coef
+		// if xFloat*readSize >= float64(task.layer.Width) || yFloat*readSize >= float64(task.layer.Height) {
 
-			if task.result != nil {
-				task.result <- Result{isSuccess: false, err: errors.New("Выход за границы")}
-				close(task.result)
-			}
-			if task.wg != nil {
-				task.wg.Done()
-			}
-			continue
+		// 	if task.result != nil {
+		// 		task.result <- Result{isSuccess: false, err: errors.New("Выход за границы")}
+		// 		close(task.result)
+		// 	}
+		// 	if task.wg != nil {
+		// 		task.wg.Done()
+		// 	}
+		// 	continue
+		// }
+		// options := []string{"-srcwin",
+		// 	fmt.Sprintf("%d", int(xFloat*readSize)),
+		// 	fmt.Sprintf("%d", int(yFloat*readSize)),
+		// 	fmt.Sprintf("%d", int(readSize)),
+		// 	fmt.Sprintf("%d", int(readSize)),
+		// 	"-outsize",
+		// 	fmt.Sprintf("%d", task.layer.TileSize),
+		// 	fmt.Sprintf("%d", task.layer.TileSize)}
+		// err = gdal.ConvertTile(
+		// 	"../resource/map/"+task.layer.SourcePath,
+		// 	task.filePath+task.fileName,
+		// 	options,
+		// )
+		minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
+
+		// Формируем команду
+		args := []string{
+			"-s_srs", task.layer.Projection,
+			"-t_srs", "EPSG:3857",
+			"-te",
+			fmt.Sprintf("%f", minX),
+			fmt.Sprintf("%f", minY),
+			fmt.Sprintf("%f", maxX),
+			fmt.Sprintf("%f", maxY),
+			"-ts",
+			strconv.Itoa(task.layer.TileSize),
+			strconv.Itoa(task.layer.TileSize),
+			"-r", "lanczos",
+			"-of", "PNG",
+			"-co", "COMPRESS=DEFLATE",
+			"-co", "ZLEVEL=6",
+			"-overwrite",
+			"../resource/map/" + task.layer.SourcePath,
+			task.filePath + task.fileName,
 		}
-		options := []string{"-srcwin",
-			fmt.Sprintf("%d", int(xFloat*readSize)),
-			fmt.Sprintf("%d", int(yFloat*readSize)),
-			fmt.Sprintf("%d", int(readSize)),
-			fmt.Sprintf("%d", int(readSize)),
-			"-outsize",
-			fmt.Sprintf("%d", task.layer.TileSize),
-			fmt.Sprintf("%d", task.layer.TileSize)}
-		err = gdal.ConvertTile(
-			"../resource/map/"+task.layer.SourcePath,
-			task.filePath+task.fileName,
-			options,
-		)
+
+		cmd := exec.Command("gdalwarp", args...)
+		err = cmd.Run()
 		if err != nil {
 
 			if task.result != nil {

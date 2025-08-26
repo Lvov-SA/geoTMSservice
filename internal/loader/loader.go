@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"geoserver/internal/db"
 	"geoserver/internal/db/models"
+	"geoserver/internal/parser"
 	"math"
 	"os"
 	"path"
@@ -66,6 +67,8 @@ func Load() error {
 		layer.SourcePath = file.Name()
 		layer.Width = dataset.RasterXSize()
 		layer.Height = dataset.RasterYSize()
+		projection, err := parser.ExtractProjectionFromWKT(dataset.Projection())
+		layer.Projection = projection
 		layer.IsActive = true
 		layer.TileSize = 256
 		layer.MinZoom = 0
