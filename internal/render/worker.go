@@ -1,18 +1,11 @@
 package render
 
 import (
-	"errors"
 	"fmt"
 	"geoserver/internal/config"
 	"geoserver/internal/db/models"
-	"geoserver/internal/translator"
-	"math"
 	"os"
-	"os/exec"
-	"strconv"
 	"sync"
-
-	"github.com/Lvov-SA/gdal"
 )
 
 type Task struct {
@@ -75,59 +68,4 @@ func renderWorker(tasks <-chan Task) {
 		}
 
 	}
-}
-
-func CliWarpRender(task Task) error {
-	minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
-
-	args := []string{
-		"-s_srs", task.layer.Projection,
-		"-t_srs", "EPSG:3857",
-		"-te",
-		fmt.Sprintf("%f", minX),
-		fmt.Sprintf("%f", minY),
-		fmt.Sprintf("%f", maxX),
-		fmt.Sprintf("%f", maxY),
-		"-ts",
-		strconv.Itoa(task.layer.TileSize),
-		strconv.Itoa(task.layer.TileSize),
-		"-r", "near",
-		"-of", "PNG",
-		"-co", "COMPRESS=DEFLATE",
-		"-co", "ZLEVEL=6",
-		"-overwrite",
-		"../resource/map/" + task.layer.SourcePath,
-		task.filePath + task.fileName,
-	}
-
-	cmd := exec.Command("gdalwarp", args...)
-	err := cmd.Run()
-	return err
-}
-
-func TranslateRender(task Task) error {
-	coef := math.Pow(2, float64(task.z))
-	maxSize := min(task.layer.Width, task.layer.Height)
-	xFloat := float64(task.x)
-	yFloat := float64(task.y)
-	maxSizeFloat := float64(maxSize)
-	readSize := maxSizeFloat / coef
-	if xFloat*readSize >= float64(task.layer.Width) || yFloat*readSize >= float64(task.layer.Height) {
-
-		return errors.New("Выход за границы")
-	}
-	options := []string{"-srcwin",
-		fmt.Sprintf("%d", int(xFloat*readSize)),
-		fmt.Sprintf("%d", int(yFloat*readSize)),
-		fmt.Sprintf("%d", int(readSize)),
-		fmt.Sprintf("%d", int(readSize)),
-		"-outsize",
-		fmt.Sprintf("%d", task.layer.TileSize),
-		fmt.Sprintf("%d", task.layer.TileSize)}
-	err := gdal.ConvertTile(
-		"../resource/map/"+task.layer.SourcePath,
-		task.filePath+task.fileName,
-		options,
-	)
-	return err
 }
