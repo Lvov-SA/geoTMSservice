@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func CliRender(layer models.Layer, z, x, y int) (image.Image, error) {
+func Tiler(layer models.Layer, z, x, y int) (image.Image, error) {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/"
 	fileName := strconv.Itoa(x) + "_" + strconv.Itoa(y) + ".png"
 	file, err := os.Open(filePath + fileName)
