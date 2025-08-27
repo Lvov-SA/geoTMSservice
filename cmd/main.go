@@ -34,6 +34,10 @@ func main() {
 		return
 	}
 
+	for _, layer := range loader.Layers {
+		defer layer.Gd.Close()
+	}
+
 	render.InitWorkers()
 
 	mux := http.NewServeMux()

@@ -14,7 +14,12 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var Layers map[string]models.Layer
+var Layers map[string]LayerGD
+
+type LayerGD struct {
+	Gd gdal.Dataset
+	models.Layer
+}
 
 func GeoTiff() error {
 	gdal.Init()
@@ -23,7 +28,7 @@ func GeoTiff() error {
 		return err
 	}
 	var layers []models.Layer
-	Layers = make(map[string]models.Layer)
+	Layers = make(map[string]LayerGD)
 
 	db, err := db.GetConnection()
 	if err != nil {
@@ -39,8 +44,7 @@ func GeoTiff() error {
 			fmt.Println("Ошибка загрузки файла " + layer.SourcePath)
 			continue
 		}
-		dataset.Close()
-		Layers[layer.Name] = layer
+		Layers[layer.Name] = LayerGD{Gd: dataset, Layer: layer}
 	}
 	return nil
 }

@@ -2,7 +2,7 @@ package render
 
 import (
 	"errors"
-	"geoserver/internal/db/models"
+	"geoserver/internal/loader"
 	"image"
 	"os"
 	"strconv"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Tiler(layer models.Layer, z, x, y int) (image.Image, error) {
+func Tiler(layer loader.LayerGD, z, x, y int) (image.Image, error) {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/"
 	fileName := strconv.Itoa(x) + "_" + strconv.Itoa(y) + ".png"
 	file, err := os.Open(filePath + fileName)
@@ -21,7 +21,7 @@ func Tiler(layer models.Layer, z, x, y int) (image.Image, error) {
 		case result := <-resultChan:
 			{
 				if result.err != nil {
-					return nil, err
+					return nil, result.err
 				}
 			}
 		case <-time.After(10 * time.Minute):
@@ -32,7 +32,6 @@ func Tiler(layer models.Layer, z, x, y int) (image.Image, error) {
 			return nil, err
 		}
 	}
-
 	imageRGBA, _, err := image.Decode(file)
 	if err != nil {
 		file.Close()
@@ -42,7 +41,7 @@ func Tiler(layer models.Layer, z, x, y int) (image.Image, error) {
 	return imageRGBA, nil
 }
 
-func MakeTask(layer models.Layer, z, x, y int, resultChan chan Result, wg *sync.WaitGroup) {
+func MakeTask(layer loader.LayerGD, z, x, y int, resultChan chan Result, wg *sync.WaitGroup) {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/"
 	fileName := strconv.Itoa(x) + "_" + strconv.Itoa(y) + ".png"
 	Tasks <- Task{
