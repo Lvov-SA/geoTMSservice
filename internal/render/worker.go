@@ -3,13 +3,13 @@ package render
 import (
 	"fmt"
 	"geoserver/internal/config"
-	"geoserver/internal/db/models"
+	"geoserver/internal/loader"
 	"os"
 	"sync"
 )
 
 type Task struct {
-	layer              models.Layer
+	layer              loader.LayerGD
 	z, x, y            int
 	filePath, fileName string
 	result             chan Result
@@ -45,8 +45,7 @@ func renderWorker(tasks <-chan Task) {
 			}
 			continue
 		}
-
-		err = CliWarpRender(task)
+		err = WarpRender(task)
 		if err != nil {
 
 			if task.result != nil {

@@ -46,6 +46,43 @@ func CliWarpRender(task Task) error {
 	return err
 }
 
+func WarpRender(task Task) error {
+	minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
+
+	switch task.layer.Projection {
+	case "EPSG:3857":
+		intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
+			maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
+		if !intersects {
+			return errors.New("Ошибка границ слоя")
+		}
+	default:
+	}
+
+	args := []string{
+		"-s_srs", task.layer.Projection,
+		"-t_srs", "EPSG:3857",
+		"-te",
+		fmt.Sprintf("%f", minX),
+		fmt.Sprintf("%f", minY),
+		fmt.Sprintf("%f", maxX),
+		fmt.Sprintf("%f", maxY),
+		"-ts",
+		strconv.Itoa(task.layer.TileSize),
+		strconv.Itoa(task.layer.TileSize),
+		"-r", "near",
+		"-of", "PNG",
+		"-co", "ZLEVEL=1",
+		"-overwrite",
+	}
+	ds, err := gdal.Warp(task.filePath+task.fileName, nil, []gdal.Dataset{task.layer.Gd}, args)
+	if ds.RasterXSize() == 0 || ds.RasterYSize() == 0 {
+		return errors.New("Ошибка генерации тайла")
+	}
+	ds.Close()
+	return err
+}
+
 func TranslateRender(task Task) error {
 	coef := math.Pow(2, float64(task.z))
 	maxSize := min(task.layer.Width, task.layer.Height)
