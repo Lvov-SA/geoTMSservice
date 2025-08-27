@@ -14,6 +14,7 @@ RUN apk add --no-cache \
     gdal-driver-gif \
     gdal-driver-jpeg \
     netcdf
+RUN apk add sqlite
 WORKDIR /app
 COPY go.mod ./ 
 RUN go mod tidy

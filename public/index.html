@@ -3,134 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тайловый просмотрщик</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>OpenLayers Карта</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        #map-container {
-            display: flex;
-            flex-direction: column;
+        #map {
+            width: 100%;
             height: 100vh;
         }
-        #loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        #map {
-            flex-grow: 1;
-            background: #e0e0e0;
-        }
-        .coordinates {
+        #coordinates {
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
             padding: 5px 10px;
-            border-radius: 3px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
             z-index: 1000;
+            font-family: monospace;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="map-container">
-        <div id="loading">Загрузка данных о карте...</div>
-        <div id="map"></div>
-        <div class="coordinates" id="coordinates">Инициализация...</div>
-    </div>
+    <div id="map"></div>
+    <div id="coordinates"></div>
+    <div id="loading">Загрузка...</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
     <script>
         // Глобальные переменные
         let map;
-        let tileLayer;
-        let imageWidth, imageHeight, tileSize;
+        const imageWidth = 16200;
+        const imageHeight = 8100;
         
         // Элементы интерфейса
         const loadingElement = document.getElementById('loading');
         const coordinatesElement = document.getElementById('coordinates');
-        imageWidth = 16200;
-        imageHeight = 8100;
-        tileSize = 256;
-        initMap();
-                
-                // Скрываем загрузчик
-        loadingElement.style.display = 'none';
-        // 2. Инициализация карты
+        
+        // Инициализация карты
         function initMap() {
-             const map = L.map('map').setView([55.7558, 37.6173], 10); // Москва
-
-            // Добавляем тайлы в Web Mercator
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
-
-            // Добавляем ваши тайлы
-            L.tileLayer('/tile/{z}/{x}/{y}.png', {
+            // 1. Создаем источник тайлов для вашего изображения
+            const customTileSource = new ol.source.XYZ({
+                url: '/tile/{z}/{x}/{y}.png',
                 maxZoom: 18,
+                projection: 'EPSG:3857' // Web Mercator
+            });
+            
+            // 2. Создаем источник для OpenStreetMap
+            const osmSource = new ol.source.OSM();
+            
+            // 3. Создаем слои
+            const osmLayer = new ol.layer.Tile({
+                source: osmSource,
+                opacity: 1
+            });
+            
+            const customLayer = new ol.layer.Tile({
+                source: customTileSource,
                 opacity: 0.7
-            }).addTo(map);
-            // Рассчитываем границы изображения
-            const pixelOrigin = [0, 0];
-            const southWest = map.unproject(pixelOrigin, 0);
-            const northEast = map.unproject([imageWidth, imageHeight], 0);
-            const bounds = new L.LatLngBounds(southWest, northEast);
+            });
             
-            // Устанавливаем начальный вид - тайл [0,0,0]
+            // 4. Рассчитываем начальный вид
+            // Для тайла [0,0,0] в zoom 0
             const startZoom = 0;
-            const startX = 0;
-            const startY = 0;
+            const startResolution = 156543.03392804062; // Разрешение для zoom 0 в Web Mercator
             
-            // Рассчитываем центр для тайла [0,0,0]
-            const tilesAtZoom = Math.pow(2, startZoom);
-            const tileWidth = imageWidth / tilesAtZoom;
-            const tileHeight = imageHeight / tilesAtZoom;
+            // Центр изображения в пикселях
+            const centerPixelX = imageWidth / 2;
+            const centerPixelY = imageHeight / 2;
             
-            const centerX = startX * tileWidth + tileWidth / 2;
-            const centerY = startY * tileHeight + tileHeight / 2;
+            // Преобразуем пиксели в координаты Web Mercator
+            const centerX = centerPixelX * startResolution - 20037508.342789244;
+            const centerY = 20037508.342789244 - centerPixelY * startResolution;
             
-            const center = map.unproject([startX, startY], startZoom);
-            map.setView(center, startZoom);
+            // 5. Создаем карту
+            map = new ol.Map({
+                target: 'map',
+                layers: [osmLayer, customLayer],
+                view: new ol.View({
+                    center: [centerX, centerY],
+                    zoom: startZoom,
+                    maxZoom: 19
+                })
+            });
             
-            // Обновляем информацию
+            // 6. Обновляем информацию
             updateInfo();
             
-            // Обработчики событий
-            map.on('moveend', updateInfo);
-            map.on('zoomend', updateInfo);
+            // 7. Обработчики событий
+            map.getView().on('change', updateInfo);
+            
+            // Скрываем загрузчик
+            loadingElement.style.display = 'none';
         }
         
-        // 3. Обновление информации о координатах
+        // Обновление информации о координатах
         function updateInfo() {
             if (!map) return;
             
-            const center = map.getCenter();
-            const zoom = map.getZoom();
+            const view = map.getView();
+            const center = view.getCenter();
+            const zoom = view.getZoom();
+            const resolution = view.getResolution();
             
-            // Рассчитываем текущий тайл
-            const scale = Math.pow(2, zoom);
-            const tileX = Math.floor(center.lng * scale / imageWidth * Math.pow(2, zoom));
-            const tileY = Math.floor(center.lat * scale / imageHeight * Math.pow(2, zoom));
+            // Преобразуем координаты Web Mercator в пиксели
+            const scale = 1 / resolution;
+            const tileX = Math.floor((center[0] + 20037508.342789244) / (256 * resolution));
+            const tileY = Math.floor((20037508.342789244 - center[1]) / (256 * resolution));
+            
+            // Преобразуем Web Mercator обратно в приблизительные градусы для отображения
+            const lon = (center[0] * 180) / 20037508.342789244;
+            const lat = (Math.atan(Math.exp(center[1] / 20037508.342789244 * Math.PI)) * 360) / Math.PI - 90;
             
             coordinatesElement.textContent = 
-                `Тайл: [${zoom},${tileX},${tileY}] | ` +
-                `Координаты: [${Math.round(center.lng)}, ${Math.round(center.lat)}] | ` +
+                `Тайл: [${Math.floor(zoom)},${tileX},${tileY}] | ` +
+                `Координаты: [${Math.round(lon)}, ${Math.round(lat)}] | ` +
                 `Zoom: ${zoom.toFixed(2)}`;
         }
+        
+        // Инициализируем карту после загрузки страницы
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
