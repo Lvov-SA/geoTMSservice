@@ -45,7 +45,7 @@ func renderWorker(tasks <-chan Task) {
 			}
 			continue
 		}
-		err = WarpRender(task)
+		err = TranslateRender(task)
 		if err != nil {
 
 			if task.result != nil {

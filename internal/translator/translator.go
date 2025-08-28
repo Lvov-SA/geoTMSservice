@@ -13,3 +13,17 @@ func WebMercarator(x, y, z int) (minX, minY, maxX, maxY float64) {
 
 	return minX, minY, maxX, maxY
 }
+
+func WGS84(x, y, z int) (minLon, minLat, maxLon, maxLat float64) {
+	minLon = float64(x)/math.Pow(2.0, float64(z))*360.0 - 180.0
+	maxLon = float64(x+1)/math.Pow(2.0, float64(z))*360.0 - 180.0
+
+	minLat = mercatorToLat(math.Pi * (1 - 2*float64(y+1)/math.Pow(2.0, float64(z))))
+	maxLat = mercatorToLat(math.Pi * (1 - 2*float64(y)/math.Pow(2.0, float64(z))))
+
+	return minLon, minLat, maxLon, maxLat
+}
+
+func mercatorToLat(y float64) float64 {
+	return 180.0 / math.Pi * math.Atan(math.Sinh(y))
+}
