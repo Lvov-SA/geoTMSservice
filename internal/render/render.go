@@ -70,7 +70,7 @@ func WarpRender(task Task) error {
 		strconv.Itoa(task.layer.TileSize),
 		strconv.Itoa(task.layer.TileSize),
 		"-co", "BIGTIFF=YES",
-		"-wm", "512",
+		"-wm", "2048",
 		"-r", "near",
 		"-of", "PNG",
 		"-co", "ZLEVEL=1",
