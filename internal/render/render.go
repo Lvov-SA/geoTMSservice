@@ -58,7 +58,6 @@ func WarpRender(task Task) error {
 		}
 	default:
 	}
-
 	args := []string{
 		"-s_srs", task.layer.Projection,
 		"-t_srs", "EPSG:3857",
@@ -70,6 +69,8 @@ func WarpRender(task Task) error {
 		"-ts",
 		strconv.Itoa(task.layer.TileSize),
 		strconv.Itoa(task.layer.TileSize),
+		"-co", "BIGTIFF=YES",
+		"-wm", "2048",
 		"-r", "near",
 		"-of", "PNG",
 		"-co", "ZLEVEL=1",
