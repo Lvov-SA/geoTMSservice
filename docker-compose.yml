@@ -16,6 +16,12 @@ services:
       - ./:/app
     networks:
       - app_network
+    mem_limit: '${MEM_LIMIT:-2G}'     # Максимальная память
+    deploy:
+      resources:
+        limits:
+          memory: '${MEM_LIMIT:-2G}'     # Максимум 4GB памяти
+          cpus: '${CPUS_COUNT:-2}'
 networks:
   app_network:
     driver: bridge

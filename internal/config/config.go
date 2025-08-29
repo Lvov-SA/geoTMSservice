@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	DB_DATABASE   string
-	USER_LOGIN    string
-	USER_PASSWORD string
-	APP_PORT      int
-	HOST          string
-	WORKER_COUNT  int
+	DB_DATABASE        string
+	USER_LOGIN         string
+	USER_PASSWORD      string
+	APP_PORT           int
+	HOST               string
+	WORKER_COUNT       int
+	GDAL_GDAL_CACHEMAX string
 }
 
 var Configs Config
@@ -38,6 +39,7 @@ func Init() error {
 		port,
 		os.Getenv("HOST"),
 		workerCount,
+		os.Getenv("GDAL_CACHEMAX"),
 	}
 	return nil
 }

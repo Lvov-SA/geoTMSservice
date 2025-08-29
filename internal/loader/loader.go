@@ -23,7 +23,6 @@ type LayerGD struct {
 
 func GeoTiff() error {
 	gdal.Init()
-	os.Setenv("GDAL_CACHEMAX", "512")
 	err := Load()
 	if err != nil {
 		return err
