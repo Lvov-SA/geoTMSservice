@@ -36,14 +36,14 @@ func main() {
 
 	layer := loader.Layers[*layerName]
 	totalTiles := 0
-	for i := 0; i < layer.MaxZoom; i++ {
+	for i := layer.MinZoom; i < layer.MaxZoom; i++ {
 		wight, height := CalculateTiles(i)
 		totalTiles = totalTiles + wight*height
 	}
 	fmt.Printf("Всего тайлов: %v", totalTiles)
 	fmt.Println()
 	i := 0
-	for z := 0; z < layer.MaxZoom; z++ {
+	for z := layer.MinZoom; z <= layer.MaxZoom; z++ {
 		wight, height := CalculateTiles(z)
 		var wg sync.WaitGroup
 		for x := 0; x < wight; x++ {
