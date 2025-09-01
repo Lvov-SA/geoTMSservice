@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"geoserver/internal/translator"
+	"os"
 	"os/exec"
 	"strconv"
 
@@ -11,12 +12,29 @@ import (
 )
 
 func CliWarpRender(task Task) error {
-	minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
+	var minX, minY, maxX, maxY float64
 
-	intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
-		maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
-	if !intersects {
-		return errors.New("Ошибка границ слоя")
+	switch task.layer.Projection {
+	//WebMercarator
+	case "EPSG:3857":
+		minX, minY, maxX, maxY = translator.WebMercarator(task.x, task.y, task.z)
+		intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
+			maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
+		if !intersects {
+			return errors.New("Ошибка границ слоя")
+		}
+	case "EPSG:4326":
+		minX, minY, maxX, maxY = translator.WGS84(task.x, task.y, task.z)
+		intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
+			maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
+		if !intersects {
+			return errors.New("Ошибка границ слоя")
+		}
+	default:
+	}
+	err := os.MkdirAll(task.filePath, 0755)
+	if err != nil {
+		return err
 	}
 	args := []string{
 		"-s_srs", task.layer.Projection,
@@ -41,21 +59,34 @@ func CliWarpRender(task Task) error {
 	}
 
 	cmd := exec.Command("gdalwarp", args...)
-	err := cmd.Run()
+	err = cmd.Run()
 	return err
 }
 
 func WarpRender(task Task) error {
-	minX, minY, maxX, maxY := translator.WebMercarator(task.x, task.y, task.z)
+	var minX, minY, maxX, maxY float64
 
 	switch task.layer.Projection {
+	//WebMercarator
 	case "EPSG:3857":
+		minX, minY, maxX, maxY = translator.WebMercarator(task.x, task.y, task.z)
+		intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
+			maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
+		if !intersects {
+			return errors.New("Ошибка границ слоя")
+		}
+	case "EPSG:4326":
+		minX, minY, maxX, maxY = translator.WGS84(task.x, task.y, task.z)
 		intersects := !(maxX < task.layer.UpperLeftX || minX > task.layer.LowerRightX ||
 			maxY < task.layer.LowerRightY || minY > task.layer.UpperLeftY)
 		if !intersects {
 			return errors.New("Ошибка границ слоя")
 		}
 	default:
+	}
+	err := os.MkdirAll(task.filePath, 0755)
+	if err != nil {
+		return err
 	}
 	args := []string{
 		"-s_srs", task.layer.Projection,
@@ -104,6 +135,10 @@ func TranslateRender(task Task) error {
 		}
 	default:
 	}
+	err := os.MkdirAll(task.filePath, 0755)
+	if err != nil {
+		return err
+	}
 	options := []string{
 		"-projwin",
 		fmt.Sprintf("%f", minX),
@@ -114,7 +149,7 @@ func TranslateRender(task Task) error {
 		"-outsize",
 		fmt.Sprintf("%d", task.layer.TileSize),
 		fmt.Sprintf("%d", task.layer.TileSize)}
-	err := gdal.ConvertTile(
+	err = gdal.ConvertTile(
 		"../resource/map/"+task.layer.SourcePath,
 		task.filePath+task.fileName,
 		options,

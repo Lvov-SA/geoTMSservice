@@ -33,19 +33,8 @@ func InitWorkers() {
 func renderWorker(tasks <-chan Task) {
 	fmt.Println("Start processing")
 	for task := range tasks {
-		err := os.MkdirAll(task.filePath, 0755)
-		if err != nil {
 
-			if task.result != nil {
-				task.result <- Result{isSuccess: false, err: err}
-				close(task.result)
-			}
-			if task.wg != nil {
-				task.wg.Done()
-			}
-			continue
-		}
-		err = TranslateRender(task)
+		err := TranslateRender(task)
 		if err != nil {
 
 			if task.result != nil {
