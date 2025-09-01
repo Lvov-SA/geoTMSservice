@@ -14,13 +14,14 @@ services:
       - '${APP_PORT:-8080}:${APP_PORT:-8080}'
     volumes:
       - ./:/app
+      - ./resource:/app/resource
     networks:
       - app_network
-    mem_limit: '${MEM_LIMIT:-2G}'     # Максимальная память
+    mem_limit: '${MEM_LIMIT:-2G}'     # Устаревшее для docker-compose
     deploy:
       resources:
         limits:
-          memory: '${MEM_LIMIT:-2G}'     # Максимум 4GB памяти
+          memory: '${MEM_LIMIT:-2G}'
           cpus: '${CPUS_COUNT:-2}'
 networks:
   app_network:

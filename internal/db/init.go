@@ -68,5 +68,9 @@ func runSeed(db *gorm.DB) error {
 	if err != nil {
 		return fmt.Errorf("Ошибка сида: %w", err)
 	}
+	err = seeds.Layers(db)
+	if err != nil {
+		return fmt.Errorf("Ошибка сида: %w", err)
+	}
 	return nil
 }
