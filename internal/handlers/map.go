@@ -3,11 +3,12 @@ package handlers
 import (
 	"geoserver/internal/loader"
 	"geoserver/internal/render"
-	"image/png"
 	"net/http"
 	"strconv"
 	"strings"
 )
+
+var CasheHandler http.Handler
 
 func TileHandler(w http.ResponseWriter, r *http.Request) {
 	tileModel, exist := loader.Layers[r.PathValue("tile")]
@@ -33,14 +34,10 @@ func TileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid y parameter", http.StatusBadRequest)
 		return
 	}
-	img, err := render.Tiler(tileModel, z, x, y)
+	err = render.Tiler(tileModel, z, x, y)
 	if err != nil {
 		http.Error(w, "Ошибка генерации тайла: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "image/png")
-	if err := png.Encode(w, img); err != nil {
-		println("Ошибка декодирвоания файла " + err.Error())
-		return
-	}
+	CasheHandler.ServeHTTP(w, r)
 }

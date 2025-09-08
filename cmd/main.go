@@ -4,17 +4,14 @@ import (
 	"fmt"
 	"geoserver/internal/config"
 	"geoserver/internal/db"
-	"geoserver/internal/handlers"
 	"geoserver/internal/loader"
-	"geoserver/internal/middlware"
 	"geoserver/internal/render"
+	"geoserver/internal/route"
 	"strconv"
 
 	"log"
 	"net/http"
 )
-
-const TileSize = 256
 
 func main() {
 
@@ -40,11 +37,7 @@ func main() {
 
 	render.InitWorkers()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.IndexHandler)
-	mux.HandleFunc("GET /{tile}/{z}/{x}/{y}", handlers.TileHandler)
-
-	handler := middlware.Init(mux)
+	handler := route.Init()
 
 	appUrl := config.Configs.HOST + ":" + strconv.Itoa(config.Configs.APP_PORT)
 	log.Println("Server started at " + appUrl)
