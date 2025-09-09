@@ -1,0 +1,41 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    # Определяем upstream (группу Go-серверов) для балансировки
+    upstream go_backend {
+        server geoserver:${APP_PORT};
+    }
+
+    server {
+        listen ${APP_PORT};
+
+        # Локация для статических картинок
+        location ~ ^/(?<layer>[a-z0-9_-]+)/(?<z>\d+)/(?<x>\d+)/(?<y>\d+)\.(?<format>png|jpg|jpeg|webp)$ {
+            root /var/cache/static;
+            
+            try_files $uri @go_balancer;
+        }
+        
+        # Локация для балансировки между Go-приложениями
+        location @go_balancer {
+            # Проксируем запрос в upstream группу
+            proxy_pass http://go_backend;
+            
+            # Важные заголовки для корректной работы
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location / {
+            proxy_pass http://go_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}

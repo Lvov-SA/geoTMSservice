@@ -10,8 +10,8 @@ services:
     #  sh -c "cd cmd && ./app"
       >  
       sh -c "cd cmd && go run main.go"
-    ports: 
-      - '${APP_PORT:-8080}:${APP_PORT:-8080}'
+    # ports: 
+    #   - '${APP_PORT:-8080}:${APP_PORT:-8080}'
     volumes:
       - ./:/app
       - ./resource:/app/resource
@@ -23,6 +23,25 @@ services:
         limits:
           memory: '${MEM_LIMIT:-2G}'
           cpus: '${CPUS_COUNT:-2}'
+  nginx-cache:
+      image: nginx:alpine
+      ports:
+        - '${APP_PORT:-8080}:${APP_PORT:-8080}'
+      volumes:
+        - ./resource/cache:/var/cache/static:rw
+        - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      depends_on:
+        - geoserver
+      networks:
+        - app_network
+      restart: unless-stopped
+      environment:
+      - APP_PORT=${APP_PORT:-8080}
+      command: >
+        sh -c "
+          envsubst '$$APP_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf &&
+          nginx -g 'daemon off;'
+        "
 networks:
   app_network:
     driver: bridge
