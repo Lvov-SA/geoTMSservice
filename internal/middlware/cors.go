@@ -3,8 +3,8 @@ package middlware
 import "net/http"
 
 func Init(mux http.Handler) http.Handler {
-	handler := cors(mux)
-	return handler
+	//handler := cors(mux)
+	return mux
 }
 
 func cors(next http.Handler) http.Handler {
