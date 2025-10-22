@@ -34,6 +34,11 @@ func TileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid y parameter", http.StatusBadRequest)
 		return
 	}
+	ext := parts[1]
+	if ext != tileModel.TileExt {
+		http.Error(w, "Invalid request extention", http.StatusBadRequest)
+		return
+	}
 	err = render.Tiler(tileModel, z, x, y)
 	if err != nil {
 		http.Error(w, "Ошибка генерации тайла: "+err.Error(), http.StatusBadRequest)

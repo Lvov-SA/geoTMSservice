@@ -11,7 +11,7 @@ import (
 
 func Tiler(layer loader.LayerGD, z, x, y int) error {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/" + strconv.Itoa(x) + "/"
-	fileName := strconv.Itoa(y) + ".png"
+	fileName := strconv.Itoa(y) + "." + layer.TileExt
 	file, err := os.Open(filePath + fileName)
 	if os.IsNotExist(err) {
 		resultChan := make(chan Result, 1)
@@ -37,7 +37,7 @@ func Tiler(layer loader.LayerGD, z, x, y int) error {
 
 func MakeTask(layer loader.LayerGD, z, x, y int, resultChan chan Result, wg *sync.WaitGroup) {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/" + strconv.Itoa(x) + "/"
-	fileName := strconv.Itoa(y) + ".png"
+	fileName := strconv.Itoa(y) + "." + layer.TileExt
 	Tasks <- Task{
 		layer:    layer,
 		filePath: filePath,

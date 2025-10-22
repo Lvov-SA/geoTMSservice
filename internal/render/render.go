@@ -114,9 +114,13 @@ func WarpRender(task Task) error {
 	return err
 }
 
+// Реалезованы ВСЕ плюшки для работы с раширениями и прочими весчами. В остальных надо дописывать
 func TranslateRender(task Task) error {
 	var minX, minY, maxX, maxY float64
-
+	ext, err := translator.ExtToOptionForTranslate(task.layer.TileExt)
+	if err != nil {
+		return err
+	}
 	switch task.layer.Projection {
 	//WebMercarator
 	case "EPSG:3857":
@@ -135,7 +139,7 @@ func TranslateRender(task Task) error {
 		}
 	default:
 	}
-	err := os.MkdirAll(task.filePath, 0755)
+	err = os.MkdirAll(task.filePath, 0755)
 	if err != nil {
 		return err
 	}
@@ -148,7 +152,9 @@ func TranslateRender(task Task) error {
 		"-a_srs", task.layer.Projection,
 		"-outsize",
 		fmt.Sprintf("%d", task.layer.TileSize),
-		fmt.Sprintf("%d", task.layer.TileSize)}
+		fmt.Sprintf("%d", task.layer.TileSize),
+		"-of", ext,
+	}
 	err = gdal.ConvertTile(
 		"../resource/map/"+task.layer.SourcePath,
 		task.filePath+task.fileName,
