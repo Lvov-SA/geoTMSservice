@@ -1,6 +1,9 @@
 package translator
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 func WebMercarator(x, y, z int) (minX, minY, maxX, maxY float64) {
 	worldSize := 20037508.342789244 * 2
@@ -26,4 +29,17 @@ func WGS84(x, y, z int) (minLon, minLat, maxLon, maxLat float64) {
 
 func mercatorToLat(y float64) float64 {
 	return 180.0 / math.Pi * math.Atan(math.Sinh(y))
+}
+
+func ExtToOptionForTranslate(ext string) (string, error) {
+	switch ext {
+	case "png":
+		return "PNG", nil
+	case "jpg":
+		return "JPG", nil
+	case "webp":
+		return "WEBP", nil
+	default:
+		return "", errors.New("Не поддерживаемый формат тайла")
+	}
 }

@@ -17,9 +17,10 @@ type Layer struct {
 	MaxZoom  int  `gorm:"default:10"`   // Максимальный zoom
 	IsActive bool `gorm:"default:true"` // Доступен для запросов
 
-	Width      int //Ширина исходника
-	Height     int //Высота исходника
-	TileSize   int `gorm:"default:256"` //размер тайла для слоя
+	Width      int    //Ширина исходника
+	Height     int    //Высота исходника
+	TileSize   int    `gorm:"default:256"` //размер тайла для слоя
+	TileExt    string `gorm:"default:png"` //расширение тайла
 	Projection string
 
 	//Границы слоя
