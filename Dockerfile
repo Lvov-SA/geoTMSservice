@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     gdal-driver-png \
     gdal-driver-gif \
     gdal-driver-jpeg \
+    gdal-driver-webp \
     netcdf
 RUN apk add sqlite
 WORKDIR /app
