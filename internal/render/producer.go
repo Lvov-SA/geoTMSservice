@@ -1,6 +1,7 @@
 package render
 
 import (
+	"context"
 	"errors"
 	"geoserver/internal/loader"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-func Tiler(layer loader.LayerGD, z, x, y int) error {
+func Tiler(layer loader.LayerGD, z, x, y int, ctx context.Context) error {
 	filePath := "../resource/cache/" + layer.Name + "/" + strconv.Itoa(z) + "/" + strconv.Itoa(x) + "/"
 	fileName := strconv.Itoa(y) + "." + layer.TileExt
 	file, err := os.Open(filePath + fileName)
@@ -23,6 +24,8 @@ func Tiler(layer loader.LayerGD, z, x, y int) error {
 					return result.err
 				}
 			}
+		case <-ctx.Done():
+			return ctx.Err()
 		case <-time.After(10 * time.Minute):
 			return errors.New("Истекло время ожидания воркера")
 		}
